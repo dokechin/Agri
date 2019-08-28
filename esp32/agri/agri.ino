@@ -30,7 +30,7 @@ BLECharacteristic* notifyCharacteristic;
 bool deviceConnected = false;
 bool oldDeviceConnected = false;
 
-uint8_t data[6*24*30];
+uint8_t data[24*7];
 unsigned long prev;
 
 class serverCallbacks: public BLEServerCallbacks {
@@ -75,7 +75,7 @@ void loop() {
   if (now - prev > 600000){
     prev = now;
     memcpy(data, &data[1], sizeof(data) - sizeof(int8_t));
-    data[6*24*30 -1] = random(256);
+    data[24*7 -1] = random(256);
   }
   // Disconnection
   if (!deviceConnected && oldDeviceConnected) {

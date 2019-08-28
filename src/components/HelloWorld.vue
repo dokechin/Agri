@@ -2,7 +2,7 @@
   <div class="hello">
     <h1>{{ bleStatus }}</h1>
     <button v-on:click="readValue">データ取得</button>
-    <apexchart width="640" height="500" type="line" :options="chartOptions" :series="series"></apexchart>
+    <apexchart width="1024" height="500" type="area" :options="chartOptions" :series="series"></apexchart>
   </div>
 </template>
 <script>
@@ -28,12 +28,15 @@ export default {
           }
         },
         xaxis: {
-          categories: ['2019-08-01 11:00','2019-08-01 12:00','2019-08-01 13:00']
-        }
+          type: 'datetime',
+        },
+        dataLabels: {
+          enabled: false
+        },
       },
       series: [{
             name: "humidity",
-            data: [10, 41, 35]
+            data: []
       }],    
     }
   },
@@ -75,8 +78,15 @@ export default {
     readValue: async function(){
       const view = await window.readCharacteristic.readValue();
       const data = new Uint8Array(view.buffer);
-      this.chartOptions.xaxis.categories = Array(6*24*30).fill().map((v,i)=>i);;
-      this.series[0].data = data;
+//    const data = new Uint8Array(24*7);
+      
+      const a = new Array();
+      var start = new Date().getTime() - 24 * 7 * 3600000;
+      for (var i=0;i<data.length;i++){
+        a.push([(start + i * 3600000),data[i]]);
+//      a.push([(start + i * 3600000), 255 * Math.random()]);
+      }
+      this.series[0].data = a;
     }
   },
   mounted: function(){
