@@ -29,8 +29,12 @@ BLECharacteristic* notifyCharacteristic;
 
 bool deviceConnected = false;
 bool oldDeviceConnected = false;
+const int PIN_NUM = 25;
+const int ANALOG_MAX = 4096;
+const int TRY_COUNT = 10;
 
 uint8_t data[24*7];
+
 unsigned long prev;
 
 class serverCallbacks: public BLEServerCallbacks {
@@ -55,6 +59,8 @@ void setup() {
 
   Serial.print("setup()");
 
+  pinMode(4, OUTPUT);
+
   BLEDevice::init("");
   BLEDevice::setEncryptionLevel(ESP_BLE_SEC_ENCRYPT_NO_MITM);
 
@@ -71,11 +77,23 @@ void setup() {
 
 void loop() {
   unsigned long now = millis();
-  // every 10 minutes
-  if (now - prev > 600000){
+  // every 1 hours
+  if (now - prev > 1000 * 60 * 60){
+
     prev = now;
     memcpy(data, &data[1], sizeof(data) - sizeof(int8_t));
-    data[24*7 -1] = random(256);
+
+    digitalWrite(4, HIGH);
+
+    int sum = 0;
+    for (int i=0;i<TRY_COUNT;i++){
+      delay(1000);
+      sum = sum + analogRead(PIN_NUM);
+    }
+    
+    digitalWrite(4, LOW);
+
+    data[24*7 -1] = ((sum / TRY_COUNT) * 255)/ ANALOG_MAX;
   }
   // Disconnection
   if (!deviceConnected && oldDeviceConnected) {
