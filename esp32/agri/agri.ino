@@ -37,9 +37,10 @@ bool deviceConnected = false;
 bool oldDeviceConnected = false;
 const int PIN_NUM = 34;
 const int ANALOG_MAX = 4096;
-const int TRY_COUNT = 5;
+const int TRY_COUNT = 3;
 
-uint8_t data[24*7];
+RTC_DATA_ATTR uint8_t data[24*7];
+RTC_DATA_ATTR long loopCount = 0;
 char humidityStr[24];
 
 unsigned long prev = 0;
@@ -94,12 +95,16 @@ void setup() {
   epd.displayFrame();
   epd.clearFrameMemory(0xFF);   // bit set = white, bit reset = black
   epd.displayFrame();
+
+  // 1000000us = 1sのタイマー設定
+  esp_sleep_enable_timer_wakeup(1000000);
+
 }
 
 void loop() {
   unsigned long now = millis();
   // every 1 hours
-  if (now - prev > 1000 * 60 * 60){
+  if (loopCount % 3600 == 0 ){
     
     prev = now;
     memcpy(data, &data[1], sizeof(data) - sizeof(int8_t));
@@ -150,6 +155,8 @@ void loop() {
   if (deviceConnected && !oldDeviceConnected) {
     oldDeviceConnected = deviceConnected;
   }
+  loopCount++;
+  esp_deep_sleep_start();
 }
 
 void setupServices(void) {
